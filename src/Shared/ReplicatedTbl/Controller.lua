@@ -5,8 +5,6 @@
     Receives all the tables which is being sent by replicators on the server
 ]]
 
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-
 local Shared = require(script.Parent.Shared)
 
 local ReplicateRemote = Shared.RemoteParent:WaitForChild(Shared.RemoteName, 5)
@@ -57,8 +55,16 @@ end
 --[[
     Returns immutable table
 ]]
-function Controller:GetTable(tblName: string)
-    if not Controller._isActive or not Controller._tables[tblName] then return end
+function Controller:GetTable(tblName: string, maxTries: number?)
+    if 
+        not Shared.RetryTill(function()
+            if Controller._isActive and Controller._tables[tblName] then
+                return true
+            else
+                return false
+            end
+        end, maxTries)
+    then return end
     
     return table.freeze(Controller._tables[tblName]._table) or nil
 end
